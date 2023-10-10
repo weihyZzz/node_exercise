@@ -15,6 +15,10 @@ const app = express();
 //   });
 // });
 // 避免回调地狱，将readFile Promise化
+// 应用urlencoded中间件，用于解析application/x-www-form-urlencoded格式的请求体数据
+app.use(express.urlencoded());
+// 用于解析application/json格式的请求体数据
+app.use(express.json());
 app.get("/", async function (req, res) {
   try {
     let back = await readFile("./db.json", "utf8");
@@ -23,6 +27,10 @@ app.get("/", async function (req, res) {
   } catch (error) {
     res.status(500).json({ error });
   }
+});
+app.post("/", async (req, res) => {
+  console.log("请求头信息:", req.headers);
+  console.log("req", req.body);
 });
 
 app.listen(3000, () => {
