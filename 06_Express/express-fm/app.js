@@ -55,6 +55,34 @@ app.post("/", async (req, res) => {
   }
 });
 
+app.put("/:id", async (req, res) => {
+  console.log(req.params.id);
+  try {
+    let userInfo = await db.getDb();
+    let userId = Number.parseInt(req.params.id);
+    // 查找id为userId的用户
+    let targetUser = userInfo.users.find((item) => item.id === userId);
+    // console.log("targetUser", targetUser);
+    let body = req.body;
+    // 开始修改该id的用户信息
+    targetUser.username = body.username ? body.username : targetUser.username;
+    targetUser.age = body.age ? body.age : targetUser.age;
+
+    // 修改
+    userInfo.users[targetUser.id - 1] = targetUser;
+    // 存放新用户信息
+    let writeRes = await db.writeDb(userInfo);
+    if (!writeRes) {
+      res.status(201).send({
+        msg: "写入成功",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error,
+    });
+  }
+});
 app.listen(3000, () => {
   console.log("Run http://127.0.0.1:3000");
 });
