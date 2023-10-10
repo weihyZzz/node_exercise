@@ -1,6 +1,7 @@
 const express = require("express");
 const fs = require("fs");
 const { promisify } = require("util");
+const db = require("./db");
 // 将fs.readFile promise化
 const readFile = promisify(fs.readFile);
 const writeFlile = promisify(fs.writeFile);
@@ -13,9 +14,9 @@ app.use(express.urlencoded());
 app.use(express.json());
 app.get("/", async function (req, res) {
   try {
-    let back = await readFile("./db.json", "utf8");
-    const userObj = JSON.parse(back).users;
-    res.send(userObj);
+    // 获取db.json本地存储的对象
+    let data = await db.getDb();
+    res.send(data.users);
   } catch (error) {
     res.status(500).json({ error });
   }
@@ -29,17 +30,19 @@ app.post("/", async (req, res) => {
       error: "缺少用户信息",
     });
   }
-  let dbData = await readFile("./db.json", "utf8");
-  let dbDataObj = JSON.parse(dbData);
+  //   let dbData = await readFile("./db.json", "utf8");
+  //   let dbDataObj = JSON.parse(dbData);
+  let dbDataObj = await db.getDb();
   let userObj = dbDataObj.users;
   let newId = userObj[userObj.length - 1].id + 1;
   //   将新id放入body中
   body.id = newId;
   userObj.push(body);
-  console.log("新增数据后的userObj", dbDataObj);
+  console.log("新增数据后的dbDataObj", dbDataObj);
   //   写入本地db.json
   try {
-    let writeRes = await writeFlile("./db.json", JSON.stringify(dbDataObj));
+    // let writeRes = await writeFlile("./db.json", JSON.stringify(dbDataObj));
+    let writeRes = await db.writeDb(dbDataObj);
     if (!writeRes) {
       res.status(200).send({
         msg: "写入成功",
